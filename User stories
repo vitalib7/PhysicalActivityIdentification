@@ -1,0 +1,27 @@
+
+Physical user stories: (large overall stories)
+As a soldier, I want the app to recognize that I am standing so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am sitting so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am hiding or crouching so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am lying down so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am prone so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am walking so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am running so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am driving so that my helmet can display the appropriate information.
+As a soldier, I want the app to recognize that I am climbing so that my helmet can display the appropriate information.
+
+Meta App user stories: (more will be made/broken down after pattern design)
+As a soldier, I want to be able to use a menu so that I can navigate through the different features of the app.
+As a soldier, I want to be able to look at the screen and see a log of all activities and their duration, so that I can track my movement throughout the day.
+As a developer, I want to be able to see my current state so that I know my action is being recognized correctly.
+
+Meta machine learning user stories:
+As a soldier, I want to be able to start the app and identify the current activity if possible so that my helmet displays the correct information from the start.
+As a future developer, I want to be able to increase the length of the black-box test, so the precision of the algorithm can improve.
+As a future developer, I want to be able to add more profiles of movement to be analyzes, so the accuracy of the algorithm can improve.
+As a future developer, I want the application designed so that its open to extension so that I can implement other capabilities.
+As a soldier, I want the app to tell me it can't detect my movement if it doesn't recognize it so that my helmet doesn't display the wrong information.
+As a developer, I want to be able to export the raw data file so that the data can be saved locally on the android device.
+As a developer, I want to be able to save the time stamp of a movement so that it can be displayed in a graph.
+As a developer, I want to save be able to save raw data when I'm creating profiles of movement so that the machine learning algorithm can utilize the data.
+As a future developer, I want the application designed so that it can be integrated into other Apps.

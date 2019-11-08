@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">PhysicalActivityIdentification</string>
+    <string name="xValue">xValue</string>
+    <string name="yValue">yValue</string>
+    <string name="zValue">zValue</string>
+    <string name="action">action</string>
 </resources>

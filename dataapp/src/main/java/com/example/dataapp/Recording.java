@@ -50,6 +50,14 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         orientation = getIntent().getStringExtra("Orientation");
         Log.d("Recording",action + " " + orientation);
 
+        StartTimer();
+
+
+
+    }
+
+    public void StartTimer()
+    {
         Thread t = new Thread() {
             @Override
             public void run() {
@@ -84,9 +92,6 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         };
 
         t.start();
-
-
-
     }
 
 

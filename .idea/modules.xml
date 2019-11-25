@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/PhysicalActivityIdentification.iml" filepath="$PROJECT_DIR$/PhysicalActivityIdentification.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dataapp/dataapp.iml" filepath="$PROJECT_DIR$/dataapp/dataapp.iml" />
     </modules>
   </component>
 </project>

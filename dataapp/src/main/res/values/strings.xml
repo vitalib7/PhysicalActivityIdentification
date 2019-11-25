@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">DataApp</string>
+
+    <string name="action">Select Action: </string>
+
+    <string name="orientation">Select Orientation: </string>
+
+    <string name="recording">Recording </string>
+
+    <string name="Start">Start </string>
+
+    <string name="Save">Save </string>
+
+
+    <string-array name="options">
+        <item>Sitting</item>
+        <item>Standing</item>
+        <item>Walking</item>
+        <item>Running</item>
+        <item>Prone</item>
+        <item>Lay Down</item>
+        <item>Driving</item>
+        <item>Hiding/Crouching</item>
+        <item>Climbing</item>
+    </string-array>
+
+    <string-array name="folded">
+        <item>Folded In</item>
+        <item>Folded Out</item>
+    </string-array>
+</resources>

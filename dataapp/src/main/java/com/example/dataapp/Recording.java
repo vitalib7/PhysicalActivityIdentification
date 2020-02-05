@@ -28,6 +28,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     Integer cur;
     String action;
     String orientation;
+    Integer record_length;
     private HandlerThread mSensorThread;
     private Handler mSensorHandler;
     private SensorManager sensorManager;
@@ -48,7 +49,8 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         timer.setText(cur.toString());
         action = getIntent().getStringExtra("Action");
         orientation = getIntent().getStringExtra("Orientation");
-        Log.d("Recording",action + " " + orientation);
+        record_length = getIntent().getIntExtra("Time",15);
+        Log.d("Recording",action + " " + orientation + record_length);
 
         StartTimer();
 
@@ -56,33 +58,37 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     }
 
-    public void StartTimer()
+    private void StartTimer()
     {
         Thread t = new Thread() {
             @Override
             public void run() {
                 try {
-                    while (cur>1) {
-                        Thread.sleep(1000);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                cur -=1;
-                                if(cur == 0)
-                                    timer.setText("Recording Data ");
-                                else
-                                    timer.setText(cur.toString());
-                            }
-                        });
+                    synchronized (cur) {
+
+                        while (cur > 1) {
+                            Thread.sleep(1000);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    cur -= 1;
+                                    if (cur == 0)
+                                        timer.setText("Recording Data ");
+                                    else
+                                        timer.setText(cur.toString());
+                                }
+                            });
+                        }
                     }
                     runSensor();
-                    while (cur<15) {
+                    while (cur<record_length) {
                         Thread.sleep(1000);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 cur +=1;
                                 timer.setText("Recording Data\n" + cur.toString());
+
                             }
                         });
                     }
@@ -111,7 +117,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     }
 
-    public void runSensor()
+    private void runSensor()
     {
         sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -134,10 +140,10 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 });
                 Log.d("data:",data.toString());
             }
-        }, 15000);
+        }, record_length * 1000);
     }
 
-    public void userReview()
+    private void userReview()
     {
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(Recording.this);
         mBuilder.setIcon(android.R.drawable.sym_def_app_icon);
@@ -164,7 +170,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         dialog.show();
     }
 
-    public void addToDatabase()
+    private void addToDatabase()
     {
         boolean success = true;
 
@@ -181,6 +187,13 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
 
             boolean insert = dbHelper.addData(temp);
+            try{
+                Thread.sleep(200);
+            }
+            catch(InterruptedException e)
+            {
+
+            }
             Log.d("Added: ",Integer.toString(i));
             if(!insert)
                 success = false;

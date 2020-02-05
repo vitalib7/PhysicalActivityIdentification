@@ -5,9 +5,14 @@
 
     <string name="orientation">Select Orientation: </string>
 
+    <string name="recording_Length">Enter recording length(seconds): </string>
+
     <string name="recording">Recording </string>
 
     <string name="Start">Start </string>
+
+    <string name="Length">Length </string>
+
 
     <string name="Save">Save </string>
 
@@ -22,6 +27,8 @@
         <item>Driving</item>
         <item>Hiding/Crouching</item>
         <item>Climbing</item>
+        <item>Sitting->Standing</item>
+        <item>Standing->Sitting</item>
     </string-array>
 
     <string-array name="folded">

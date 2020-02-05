@@ -1,15 +1,30 @@
 package com.example.dataapp;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class DBHelper extends SQLiteOpenHelper {
+public class DBHelper{
 
+    Context context;
     private static final String TAG = "DBHelper";
     private static final String TABLE_NAME = "Action_Table";
     private static final String COL1 = "User_ID";
@@ -23,52 +38,60 @@ public class DBHelper extends SQLiteOpenHelper {
    // private static final String COL9 = "Helmet_Accel_Y";
    // private static final String COL10 = "Helmet_Accel_Z";
 
-    public DBHelper(Context context)
-    {
-        super(context, TABLE_NAME, null,1);
-    }
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        String sql = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +" (\n"
-                + "    User_ID integer PRIMARY KEY AUTOINCREMENT,\n"
-                + "    Orientation text NOT NULL,\n"
-                + "    Activity text NOT NULL,\n"
-                + "    Timestamp text NOT NULL,\n"
-                + "    Chest_Accel_X real NOT NULL,\n"
-                + "    Chest_Accel_Y real NOT NULL,\n"
-                + "    Chest_Accel_Z real NOT NULL\n"
-              //  + "    Helmet_Accel_X real NOT NULL,\n"
-               // + "    Helmet_Accel_Y real NOT NULL,\n"
-               // + "    Helmet_Accel_Z real NOT NULL\n"
-                + ");";
-        db.execSQL(sql);
+    public DBHelper(Context context){
+        this.context = context;
+
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME );
-        onCreate(db);
-    }
 
-    public boolean addData(ArrayList<String> items)
+    public boolean addData( final ArrayList<String> items)
     {
 
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(COL2,items.get(0));
-        contentValues.put(COL3,items.get(1));
-        contentValues.put(COL4,items.get(2));
-        contentValues.put(COL5,Float.valueOf(items.get(3)));
-        contentValues.put(COL6,Float.valueOf(items.get(4)));
-        contentValues.put(COL7,Float.valueOf(items.get(5)));
-        //contentValues.put(COL8,items.get(6));
-        //contentValues.put(COL9,items.get(7));
-        //contentValues.put(COL10,items.get(8));
-        Log.d(TAG,"addData: Adding " + items.toString() + " to " + TABLE_NAME);
-        long result = db.insert(TABLE_NAME,null,contentValues);
-        if( result == -1)
-            return false;
-        else
-            return true;
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> contentValues = new HashMap<>();
+
+                //here we pass params
+                contentValues.put("action","addItem");
+                contentValues.put(COL2,items.get(0));
+                contentValues.put(COL3,items.get(1));
+                contentValues.put(COL4,items.get(2));
+                contentValues.put(COL5,items.get(3));
+                contentValues.put(COL6,items.get(4));
+                contentValues.put(COL7,items.get(5));
+                //contentValues.put(COL8,items.get(6));
+                //contentValues.put(COL9,items.get(7));
+                //contentValues.put(COL10,items.get(8));
+
+                return contentValues;
+            }
+        };
+
+        int socketTimeOut = 50000;
+
+        RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        stringRequest.setRetryPolicy(retryPolicy);
+
+        RequestQueue queue =  Volley.newRequestQueue(context);
+
+        queue.add(stringRequest);
+
+        return true;
+
     }
 }

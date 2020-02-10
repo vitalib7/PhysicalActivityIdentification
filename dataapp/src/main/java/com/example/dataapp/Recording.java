@@ -21,6 +21,7 @@ import org.w3c.dom.Text;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Recording extends AppCompatActivity implements SensorEventListener {
 
@@ -36,6 +37,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     private ArrayList<String> data;
     private Timestamp time;
     DBHelper dbHelper;
+    private Date date;
 
 
     @Override
@@ -45,6 +47,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         data = new ArrayList<String>();
         setContentView(R.layout.activity_recording);
         timer = (TextView) findViewById(R.id.textView3);
+
         cur = 3;
         timer.setText(cur.toString());
         action = getIntent().getStringExtra("Action");
@@ -104,8 +107,9 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     @Override
     public void onSensorChanged(SensorEvent event) {
         Log.d("Sensor","sensor changed");
-        time = new Timestamp(System.currentTimeMillis());
-        data.add(time.toString());
+        //time = new Timestamp(System.currentTimeMillis());
+        date = new Date();
+        data.add(Long.toString(date.getTime()));
         data.add(String.valueOf(event.values[0]));
         data.add(String.valueOf(event.values[1]));
         data.add(String.valueOf(event.values[2]));

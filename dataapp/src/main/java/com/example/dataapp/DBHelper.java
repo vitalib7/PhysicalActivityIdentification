@@ -15,12 +15,19 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 public class DBHelper{
 
@@ -34,24 +41,39 @@ public class DBHelper{
     private static final String COL5 = "Chest_Accel_X";
     private static final String COL6 = "Chest_Accel_Y";
     private static final String COL7 = "Chest_Accel_Z";
+    RequestQueue queue;
    // private static final String COL8 = "Helmet_Accel_X";
    // private static final String COL9 = "Helmet_Accel_Y";
    // private static final String COL10 = "Helmet_Accel_Z";
+    private static ExecutorService threadpool;
 
     public DBHelper(Context context){
         this.context = context;
+        queue =  Volley.newRequestQueue(context);
+        threadpool = Executors.newFixedThreadPool(3);
+
+
 
     }
 
 
-    public boolean addData( final ArrayList<String> items)
-    {
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec",
+    public void addData( final ArrayList<String> items)
+    {
+        System.out.println(queue.getSequenceNumber());
+        class runTask implements Runnable {
+            private int counter;
+
+            @Override
+            public void run() {
+
+            }
+        }
+
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-
 
                     }
                 },
@@ -68,12 +90,13 @@ public class DBHelper{
 
                 //here we pass params
                 contentValues.put("action","addItem");
-                contentValues.put(COL2,items.get(0));
-                contentValues.put(COL3,items.get(1));
-                contentValues.put(COL4,items.get(2));
-                contentValues.put(COL5,items.get(3));
-                contentValues.put(COL6,items.get(4));
-                contentValues.put(COL7,items.get(5));
+                contentValues.put(COL1,items.get(0));
+                contentValues.put(COL2,items.get(1));
+                contentValues.put(COL3,items.get(2));
+                contentValues.put(COL4,items.get(3));
+                contentValues.put(COL5,items.get(4));
+                contentValues.put(COL6,items.get(5));
+                contentValues.put(COL7,items.get(6));
                 //contentValues.put(COL8,items.get(6));
                 //contentValues.put(COL9,items.get(7));
                 //contentValues.put(COL10,items.get(8));
@@ -87,11 +110,85 @@ public class DBHelper{
         RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         stringRequest.setRetryPolicy(retryPolicy);
 
-        RequestQueue queue =  Volley.newRequestQueue(context);
+
 
         queue.add(stringRequest);
 
-        return true;
+
+
+
 
     }
+
+    /**
+  public void addData( final ArrayList<String> items)
+   {
+       dbAdder db = new dbAdder(context,items);
+       threadpool.submit(db);
+   }*/
+
+   public void awaitEnd()
+   {
+
+   }
+
+    private static class dbAdder implements Callable {
+
+        private ArrayList<String> items;
+        private Context context;
+
+        public dbAdder(Context context, ArrayList<String> items)
+        {
+            this.items = items;
+            System.out.println("copying: " + items.size());
+            this.context = context;
+        }
+        @Override
+        public String call() throws Exception {
+            System.out.println("calling");
+            RequestQueue rq = Volley.newRequestQueue(context);
+            String url = "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec";
+            RequestFuture<String> future = RequestFuture.newFuture();
+            StringRequest request = new StringRequest(Request.Method.POST, url, future,future){
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> contentValues = new HashMap<>();
+
+                    //here we pass params
+                    contentValues.put("action","addItem");
+                    contentValues.put(COL1,items.get(0));
+                    contentValues.put(COL2,items.get(1));
+                    contentValues.put(COL3,items.get(2));
+                    contentValues.put(COL4,items.get(3));
+                    contentValues.put(COL5,items.get(4));
+                    contentValues.put(COL6,items.get(5));
+                    contentValues.put(COL7,items.get(6));
+                    //contentValues.put(COL8,items.get(6));
+                    //contentValues.put(COL9,items.get(7));
+                    //contentValues.put(COL10,items.get(8));
+
+                    return contentValues;
+                }
+            };
+            rq.add(request);
+            String result = "TEmp";
+            try {
+                result = future.get(); // this line will block
+            } catch (Exception e) {
+            }
+            System.out.println(result);
+            return result;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 }

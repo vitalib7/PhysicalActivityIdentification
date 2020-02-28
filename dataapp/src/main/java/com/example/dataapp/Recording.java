@@ -8,6 +8,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -17,11 +18,26 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.RequestFuture;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.security.spec.ECField;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 
 public class Recording extends AppCompatActivity implements SensorEventListener {
 
@@ -34,18 +50,25 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     private Handler mSensorHandler;
     private SensorManager sensorManager;
     private Sensor accel;
-    private ArrayList<String> data;
+    List<String> data =
+            Collections.synchronizedList(new ArrayList<String>());
     private Timestamp time;
     DBHelper dbHelper;
     private Date date;
+    private String id;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dbHelper = new DBHelper(this);
-        data = new ArrayList<String>();
+
+
+        //data = new ArrayList<String>();
         setContentView(R.layout.activity_recording);
+        Asynch runner = new Asynch(this);
+        runner.execute();
         timer = (TextView) findViewById(R.id.textView3);
 
         cur = 3;
@@ -83,7 +106,9 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                             });
                         }
                     }
-                    runSensor();
+                    synchronized (this) {
+                        runSensor();
+                    }
                     while (cur<record_length) {
                         Thread.sleep(1000);
                         runOnUiThread(new Runnable() {
@@ -106,13 +131,15 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.d("Sensor","sensor changed");
-        //time = new Timestamp(System.currentTimeMillis());
-        date = new Date();
-        data.add(Long.toString(date.getTime()));
-        data.add(String.valueOf(event.values[0]));
-        data.add(String.valueOf(event.values[1]));
-        data.add(String.valueOf(event.values[2]));
+        synchronized (data) {
+            Log.d("Sensor", "sensor changed");
+            //time = new Timestamp(System.currentTimeMillis());
+            date = new Date();
+            data.add(Long.toString(date.getTime()));
+            data.add(String.valueOf(event.values[0]));
+            data.add(String.valueOf(event.values[1]));
+            data.add(String.valueOf(event.values[2]));
+        }
 
     }
 
@@ -123,89 +150,138 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     private void runSensor()
     {
-        sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
-        accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mSensorThread = new HandlerThread("Sensor thread", Thread.MAX_PRIORITY);
-        mSensorThread.start();
-        mSensorHandler = new Handler(mSensorThread.getLooper()); //Blocks until looper is prepared, which is fairly quick
-        sensorManager.registerListener(this,accel,sensorManager.SENSOR_DELAY_NORMAL,mSensorHandler);
-        //after 15 seconds, turn off the sensors
-        mSensorHandler.postDelayed(new Runnable () {
-            public void run () {
-                sensorManager.unregisterListener(Recording.this);
-                mSensorThread.quitSafely();
-                //Need to call this on main thread because this thread dies
-                Handler mHandler = new Handler(getMainLooper());
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        userReview();
-                    }
-                });
-                Log.d("data:",data.toString());
-            }
-        }, record_length * 1000);
+
+        synchronized (data) {
+            sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
+            accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            mSensorThread = new HandlerThread("Sensor thread", Thread.MAX_PRIORITY);
+            mSensorThread.start();
+            mSensorHandler = new Handler(mSensorThread.getLooper()); //Blocks until looper is prepared, which is fairly quick
+            sensorManager.registerListener(this, accel, sensorManager.SENSOR_DELAY_NORMAL, mSensorHandler);
+            //after 15 seconds, turn off the sensors
+            mSensorHandler.postDelayed(new Runnable() {
+                public void run() {
+                    sensorManager.unregisterListener(Recording.this);
+                    mSensorThread.quitSafely();
+                    //Need to call this on main thread because this thread dies
+                    Handler mHandler = new Handler(getMainLooper());
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            userReview();
+                        }
+                    });
+                    Log.d("data:", data.toString());
+                }
+            }, record_length * 1000);
+        }
     }
 
     private void userReview()
     {
-        AlertDialog.Builder mBuilder = new AlertDialog.Builder(Recording.this);
-        mBuilder.setIcon(android.R.drawable.sym_def_app_icon);
-        mBuilder.setTitle("Save Data?");
-        mBuilder.setMessage("Would you like to save this data to the database?");
-        mBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                addToDatabase();
-                dialog.dismiss();
-                Intent intent = new Intent(Recording.this, MainActivity.class);
-                startActivity(intent);
-            }
-        });
-        mBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                Intent intent = new Intent(Recording.this, MainActivity.class);
-                startActivity(intent);
-            }
-        });
-        AlertDialog dialog = mBuilder.create();
-        dialog.show();
+        System.out.println("THREAD" + Thread.currentThread());
+        synchronized (data) {
+            Log.d("Cur ID", id + "");
+            AlertDialog.Builder mBuilder = new AlertDialog.Builder(Recording.this);
+            mBuilder.setIcon(android.R.drawable.sym_def_app_icon);
+            mBuilder.setTitle("Save Data?");
+            mBuilder.setMessage("Would you like to save this data to the database? " + data.size() / 4);
+            mBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    addToDatabase();
+                    dialog.dismiss();
+                    Intent intent = new Intent(Recording.this, MainActivity.class);
+                    startActivity(intent);
+                }
+            });
+            mBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    Intent intent = new Intent(Recording.this, MainActivity.class);
+                    startActivity(intent);
+                }
+            });
+            AlertDialog dialog = mBuilder.create();
+            dialog.show();
+        }
     }
 
     private void addToDatabase()
     {
-        boolean success = true;
-
-        for(int i = 1; i < data.size()/4;i++)
-        {
-            //Add the corresponding values to the db row
-            ArrayList<String> temp = new ArrayList<>();
-            temp.add(orientation);
-            temp.add(action);
-            temp.add(data.get((i-1) * 4));
-            temp.add(data.get(1+ ((i-1) * 4)));
-            temp.add(data.get(2+ ((i-1) * 4)));
-            temp.add(data.get(3+ ((i-1) * 4)));
-
-
-            boolean insert = dbHelper.addData(temp);
-            try{
-                Thread.sleep(200);
+        synchronized (data) {
+            int newId = 0;
+            try {
+                 newId = Integer.parseInt(id) + 1;
             }
-            catch(InterruptedException e)
+            catch(NumberFormatException e)
             {
+                newId = 0;
+            }
+            Log.d("Added: ", Integer.toString(newId));
+
+
+            for (int i = 1; i < data.size() / 4; i++) {
+                //Add the corresponding values to the db row
+                ArrayList<String> temp = new ArrayList<>();
+                temp.add(String.valueOf(newId));
+                temp.add(orientation);
+                temp.add(action);
+                temp.add(data.get((i - 1) * 4));
+                temp.add(data.get(1 + ((i - 1) * 4)));
+                temp.add(data.get(2 + ((i - 1) * 4)));
+                temp.add(data.get(3 + ((i - 1) * 4)));
+
+
+                dbHelper.addData(temp);
+                dbHelper.awaitEnd();
+
+                Log.d("Added: ", Integer.toString(i));
 
             }
-            Log.d("Added: ",Integer.toString(i));
-            if(!insert)
-                success = false;
+
+
         }
-        if(success)
-            Toast.makeText(Recording.this,"Successfully Inserted data",Toast.LENGTH_SHORT);
-        else
-            Toast.makeText(Recording.this,"Error Inserting Data",Toast.LENGTH_SHORT);
+
+
+
 
     }
-}
+
+    private class Asynch extends AsyncTask<Void,Void,String> {
+        Context context;
+        String result;
+
+        Asynch(Context context)
+        {
+            this.context = context;
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            RequestQueue rq = Volley.newRequestQueue(context);
+            String url = "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec?action=getId";
+            RequestFuture<String> future = RequestFuture.newFuture();
+            StringRequest request = new StringRequest(Request.Method.GET, url, future, future);
+            rq.add(request);
+            String result = "TEmp";
+            try {
+                result = future.get(); // this line will block
+            } catch (Exception e) {
+            }
+            id = result;
+            this.result = id;
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            id = this.result;
+        }
+    }
+
+
+
+    }
+

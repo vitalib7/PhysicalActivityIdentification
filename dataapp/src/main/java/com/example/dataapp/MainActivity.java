@@ -15,7 +15,6 @@ public class MainActivity extends AppCompatActivity {
     Button btn;
     Spinner spinner;
     Spinner foldSpinner;
-    DBHelper dbHelper;
     EditText num;
 
     @Override
@@ -25,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
 
         //Set up spinner to select action
         spinner = (Spinner)findViewById(R.id.spinner);
-        dbHelper = new DBHelper(this);
 
         ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_list_item_1,getResources().getStringArray(R.array.options));

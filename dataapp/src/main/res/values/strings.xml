@@ -9,12 +9,20 @@
 
     <string name="recording">Recording </string>
 
+    <string name="speed">Select sensor speed </string>
+
     <string name="Start">Start </string>
 
     <string name="Length">Length </string>
 
 
     <string name="Save">Save </string>
+
+    <string-array name="Speed">
+        <item>Slowest(Default)(~200 ms)</item>
+        <item>Fastest(18&#8211;20 ms)</item>
+        <item>Average(85&#8211;87 ms)</item>
+    </string-array>
 
 
     <string-array name="options">

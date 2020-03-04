@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
     Button btn;
     Spinner spinner;
     Spinner foldSpinner;
+    Spinner speedSpinner;
     EditText num;
 
     @Override
@@ -36,6 +37,18 @@ public class MainActivity extends AppCompatActivity {
         //Set up spinner to select phone orientation
         foldSpinner = (Spinner)findViewById(R.id.spinner2);
 
+
+
+
+
+        //Set up spinner to select speed
+        speedSpinner = (Spinner)findViewById(R.id.spinner3);
+
+        ArrayAdapter<String> speedAdapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1,getResources().getStringArray(R.array.Speed));
+
+        speedSpinner.setAdapter(speedAdapter);
+
         ArrayAdapter<String> foldAdapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_list_item_1,getResources().getStringArray(R.array.folded));
 
@@ -47,18 +60,41 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d("Button:","Button Pressed");
-                openRecording( spinner.getSelectedItem().toString(),foldSpinner.getSelectedItem().toString(),Integer.parseInt(num.getText().toString()));
+                openRecording( spinner.getSelectedItem().toString(),foldSpinner.getSelectedItem().toString(), speedSpinner.getSelectedItem().toString(),Integer.parseInt(num.getText().toString()));
             }
         });
     }
 
-    private void openRecording(String action,String orientation,int time)
+    /**
+     * Open the recording screen
+     * @param action
+     * @param orientation
+     * @param speed
+     * @param time
+     */
+    private void openRecording(String action,String orientation, String speed, int time)
     {
         Intent intent = new Intent(this, Recording.class);
         intent.putExtra("Action",action);
         intent.putExtra("Orientation",orientation);
         intent.putExtra("Time",time);
+        intent.putExtra("Speed", convertString(speed));
         startActivity(intent);
+    }
+
+    /**
+     * Convert speed to simpler string to send to new activity
+     * @param speed
+     * @return
+     */
+    private String convertString(String speed)
+    {
+        if(speed.contains("Slowest") )
+            return "Slow";
+        else if(speed.contains("Fastest"))
+            return "Fast";
+        else
+            return "Average";
     }
 
 }

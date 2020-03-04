@@ -41,21 +41,21 @@ import java.util.concurrent.FutureTask;
 
 public class Recording extends AppCompatActivity implements SensorEventListener {
 
-    TextView timer;
-    Integer cur;
-    String action;
-    String orientation;
-    Integer record_length;
+    private TextView timer;
+    private Integer cur;
+    private String action;
+    private String orientation;
+    private Integer record_length;
     private HandlerThread mSensorThread;
     private Handler mSensorHandler;
     private SensorManager sensorManager;
     private Sensor accel;
-    List<String> data =
+    private List<String> data =
             Collections.synchronizedList(new ArrayList<String>());
-    private Timestamp time;
-    DBHelper dbHelper;
+    private DBHelper dbHelper;
     private Date date;
     private String id;
+    private String speed;
 
 
 
@@ -63,27 +63,38 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dbHelper = new DBHelper(this);
-
-
-        //data = new ArrayList<String>();
         setContentView(R.layout.activity_recording);
         Asynch runner = new Asynch(this);
         runner.execute();
         timer = (TextView) findViewById(R.id.textView3);
-
         cur = 3;
         timer.setText(cur.toString());
         action = getIntent().getStringExtra("Action");
         orientation = getIntent().getStringExtra("Orientation");
         record_length = getIntent().getIntExtra("Time",15);
+        speed = getIntent().getStringExtra("Speed");
         Log.d("Recording",action + " " + orientation + record_length);
-
         StartTimer();
-
-
 
     }
 
+    /**
+     * Convert sensor speed to correct unit
+     * @return
+     */
+    private int getSpeed()
+    {
+        if(speed.contains("Slow"))
+            return sensorManager.SENSOR_DELAY_NORMAL;
+        else if(speed.contains("Fast"))
+            return sensorManager.SENSOR_DELAY_FASTEST;
+        else
+            return sensorManager.SENSOR_DELAY_UI;
+    }
+
+    /**
+     * Starts timer in thread separate from sensor
+     */
     private void StartTimer()
     {
         Thread t = new Thread() {
@@ -106,7 +117,8 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                             });
                         }
                     }
-                    synchronized (this) {
+                    //After 3 seconds, run the sensor
+                    synchronized (data) {
                         runSensor();
                     }
                     while (cur<record_length) {
@@ -132,13 +144,15 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     @Override
     public void onSensorChanged(SensorEvent event) {
         synchronized (data) {
-            Log.d("Sensor", "sensor changed");
-            //time = new Timestamp(System.currentTimeMillis());
-            date = new Date();
-            data.add(Long.toString(date.getTime()));
-            data.add(String.valueOf(event.values[0]));
-            data.add(String.valueOf(event.values[1]));
-            data.add(String.valueOf(event.values[2]));
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                Log.d("Sensor", "sensor changed");
+                //time = new Timestamp(System.currentTimeMillis());
+                date = new Date();
+                data.add(Long.toString(date.getTime()));
+                data.add(String.valueOf(event.values[0]));
+                data.add(String.valueOf(event.values[1]));
+                data.add(String.valueOf(event.values[2]));
+            }
         }
 
     }
@@ -148,6 +162,9 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     }
 
+    /**
+     * Starts the sensor on new handler thread
+     */
     private void runSensor()
     {
 
@@ -157,7 +174,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
             mSensorThread = new HandlerThread("Sensor thread", Thread.MAX_PRIORITY);
             mSensorThread.start();
             mSensorHandler = new Handler(mSensorThread.getLooper()); //Blocks until looper is prepared, which is fairly quick
-            sensorManager.registerListener(this, accel, sensorManager.SENSOR_DELAY_NORMAL, mSensorHandler);
+            sensorManager.registerListener(this, accel, getSpeed(), mSensorHandler);
             //after 15 seconds, turn off the sensors
             mSensorHandler.postDelayed(new Runnable() {
                 public void run() {
@@ -177,15 +194,17 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         }
     }
 
+    /**
+     * Prompt user to add to database
+     */
     private void userReview()
     {
-        System.out.println("THREAD" + Thread.currentThread());
         synchronized (data) {
             Log.d("Cur ID", id + "");
             AlertDialog.Builder mBuilder = new AlertDialog.Builder(Recording.this);
             mBuilder.setIcon(android.R.drawable.sym_def_app_icon);
             mBuilder.setTitle("Save Data?");
-            mBuilder.setMessage("Would you like to save this data to the database? " + data.size() / 4);
+            mBuilder.setMessage("Would you like to save this data to the database? " + "\nSize: " + data.size() / 4);
             mBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -208,16 +227,19 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         }
     }
 
+    /**
+     * Add data to google sheets db
+     */
     private void addToDatabase()
     {
         synchronized (data) {
             int newId = 0;
             try {
-                 newId = Integer.parseInt(id) + 1;
+                 newId = Integer.parseInt(id) + 1; //get previous userID and add 1
             }
             catch(NumberFormatException e)
             {
-                newId = 0;
+                newId = 0; //If error, then db is empty and userID is 0
             }
             Log.d("Added: ", Integer.toString(newId));
 
@@ -228,6 +250,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 temp.add(String.valueOf(newId));
                 temp.add(orientation);
                 temp.add(action);
+                temp.add(speed);
                 temp.add(data.get((i - 1) * 4));
                 temp.add(data.get(1 + ((i - 1) * 4)));
                 temp.add(data.get(2 + ((i - 1) * 4)));
@@ -235,7 +258,6 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
 
                 dbHelper.addData(temp);
-                dbHelper.awaitEnd();
 
                 Log.d("Added: ", Integer.toString(i));
 
@@ -249,6 +271,9 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     }
 
+    /**
+     * Get previous userID in background
+     */
     private class Asynch extends AsyncTask<Void,Void,String> {
         Context context;
         String result;
@@ -280,6 +305,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
             id = this.result;
         }
     }
+
 
 
 

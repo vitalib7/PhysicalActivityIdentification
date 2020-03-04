@@ -31,26 +31,25 @@ import java.util.concurrent.TimeUnit;
 
 public class DBHelper{
 
-    Context context;
+    private Context context;
     private static final String TAG = "DBHelper";
     private static final String TABLE_NAME = "Action_Table";
     private static final String COL1 = "User_ID";
     private static final String COL2 = "Orientation";
     private static final String COL3 = "Activity";
-    private static final String COL4 = "Timestamp";
-    private static final String COL5 = "Chest_Accel_X";
-    private static final String COL6 = "Chest_Accel_Y";
-    private static final String COL7 = "Chest_Accel_Z";
-    RequestQueue queue;
+    private static final String COL4 = "Speed";
+    private static final String COL5 = "Timestamp";
+    private static final String COL6 = "Chest_Accel_X";
+    private static final String COL7 = "Chest_Accel_Y";
+    private static final String COL8 = "Chest_Accel_Z";
+    private RequestQueue queue;
    // private static final String COL8 = "Helmet_Accel_X";
    // private static final String COL9 = "Helmet_Accel_Y";
    // private static final String COL10 = "Helmet_Accel_Z";
-    private static ExecutorService threadpool;
 
     public DBHelper(Context context){
         this.context = context;
         queue =  Volley.newRequestQueue(context);
-        threadpool = Executors.newFixedThreadPool(3);
 
 
 
@@ -60,15 +59,6 @@ public class DBHelper{
 
     public void addData( final ArrayList<String> items)
     {
-        System.out.println(queue.getSequenceNumber());
-        class runTask implements Runnable {
-            private int counter;
-
-            @Override
-            public void run() {
-
-            }
-        }
 
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec",
                 new Response.Listener<String>() {
@@ -97,6 +87,7 @@ public class DBHelper{
                 contentValues.put(COL5,items.get(4));
                 contentValues.put(COL6,items.get(5));
                 contentValues.put(COL7,items.get(6));
+                contentValues.put(COL8,items.get(7));
                 //contentValues.put(COL8,items.get(6));
                 //contentValues.put(COL9,items.get(7));
                 //contentValues.put(COL10,items.get(8));
@@ -119,76 +110,6 @@ public class DBHelper{
 
 
     }
-
-    /**
-  public void addData( final ArrayList<String> items)
-   {
-       dbAdder db = new dbAdder(context,items);
-       threadpool.submit(db);
-   }*/
-
-   public void awaitEnd()
-   {
-
-   }
-
-    private static class dbAdder implements Callable {
-
-        private ArrayList<String> items;
-        private Context context;
-
-        public dbAdder(Context context, ArrayList<String> items)
-        {
-            this.items = items;
-            System.out.println("copying: " + items.size());
-            this.context = context;
-        }
-        @Override
-        public String call() throws Exception {
-            System.out.println("calling");
-            RequestQueue rq = Volley.newRequestQueue(context);
-            String url = "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec";
-            RequestFuture<String> future = RequestFuture.newFuture();
-            StringRequest request = new StringRequest(Request.Method.POST, url, future,future){
-                @Override
-                protected Map<String, String> getParams() {
-                    Map<String, String> contentValues = new HashMap<>();
-
-                    //here we pass params
-                    contentValues.put("action","addItem");
-                    contentValues.put(COL1,items.get(0));
-                    contentValues.put(COL2,items.get(1));
-                    contentValues.put(COL3,items.get(2));
-                    contentValues.put(COL4,items.get(3));
-                    contentValues.put(COL5,items.get(4));
-                    contentValues.put(COL6,items.get(5));
-                    contentValues.put(COL7,items.get(6));
-                    //contentValues.put(COL8,items.get(6));
-                    //contentValues.put(COL9,items.get(7));
-                    //contentValues.put(COL10,items.get(8));
-
-                    return contentValues;
-                }
-            };
-            rq.add(request);
-            String result = "TEmp";
-            try {
-                result = future.get(); // this line will block
-            } catch (Exception e) {
-            }
-            System.out.println(result);
-            return result;
-        }
-    }
-
-
-
-
-
-
-
-
-
 
 
 }

@@ -56,6 +56,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     private Date date;
     private String id;
     private String speed;
+    private String userID;
 
 
 
@@ -73,6 +74,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         orientation = getIntent().getStringExtra("Orientation");
         record_length = getIntent().getIntExtra("Time",15);
         speed = getIntent().getStringExtra("Speed");
+        userID = getIntent().getStringExtra("ID");
         Log.d("Recording",action + " " + orientation + record_length);
         StartTimer();
 
@@ -255,6 +257,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 temp.add(data.get(1 + ((i - 1) * 4)));
                 temp.add(data.get(2 + ((i - 1) * 4)));
                 temp.add(data.get(3 + ((i - 1) * 4)));
+                temp.add(userID);
 
 
                 dbHelper.addData(temp);
@@ -286,7 +289,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
         @Override
         protected String doInBackground(Void... voids) {
             RequestQueue rq = Volley.newRequestQueue(context);
-            String url = "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec?action=getId";
+            String url = "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec?action=getTrial";
             RequestFuture<String> future = RequestFuture.newFuture();
             StringRequest request = new StringRequest(Request.Method.GET, url, future, future);
             rq.add(request);

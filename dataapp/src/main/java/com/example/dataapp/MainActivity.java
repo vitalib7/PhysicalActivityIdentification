@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     Spinner foldSpinner;
     Spinner speedSpinner;
     EditText num;
+    EditText id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
                 android.R.layout.simple_list_item_1,getResources().getStringArray(R.array.options));
 
         num = (EditText) findViewById(R.id.editText2);
+        id = (EditText) findViewById(R.id.editText);
 
         myAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(myAdapter);
@@ -60,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d("Button:","Button Pressed");
-                openRecording( spinner.getSelectedItem().toString(),foldSpinner.getSelectedItem().toString(), speedSpinner.getSelectedItem().toString(),Integer.parseInt(num.getText().toString()));
+                openRecording( spinner.getSelectedItem().toString(),foldSpinner.getSelectedItem().toString(),
+                        speedSpinner.getSelectedItem().toString(),Integer.parseInt(num.getText().toString()),id.getText().toString());
             }
         });
     }
@@ -72,13 +75,14 @@ public class MainActivity extends AppCompatActivity {
      * @param speed
      * @param time
      */
-    private void openRecording(String action,String orientation, String speed, int time)
+    private void openRecording(String action,String orientation, String speed, int time, String id)
     {
         Intent intent = new Intent(this, Recording.class);
         intent.putExtra("Action",action);
         intent.putExtra("Orientation",orientation);
         intent.putExtra("Time",time);
         intent.putExtra("Speed", convertString(speed));
+        intent.putExtra("ID", id);
         startActivity(intent);
     }
 

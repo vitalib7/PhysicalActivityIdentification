@@ -15,6 +15,10 @@
 
     <string name="Length">Length </string>
 
+    <string name="userID">Enter User ID: (Ex: John Smith = JohnS) </string>
+
+    <string name="ID">ID </string>
+
 
     <string name="Save">Save </string>
 

@@ -57,6 +57,8 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     private String id;
     private String speed;
     private String userID;
+    CountDownTimer prepareTimer = null;
+    CountDownTimer recordTimer = null;
 
 
 
@@ -95,51 +97,34 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
     }
 
     /**
-     * Starts timer in thread separate from sensor
+     * first, starts countdown timer to let user prepare. Once that timer is at 0, another timer is started
+     * that counts down the length the user inputted and also runs the sensors
      */
     private void StartTimer()
     {
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    synchronized (cur) {
+        prepareTimer = new CountDownTimer(5000, 1000) {
 
-                        while (cur > 1) {
-                            Thread.sleep(1000);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    cur -= 1;
-                                    if (cur == 0)
-                                        timer.setText("Recording Data ");
-                                    else
-                                        timer.setText(cur.toString());
-                                }
-                            });
-                        }
-                    }
-                    //After 3 seconds, run the sensor
-                    synchronized (data) {
-                        runSensor();
-                    }
-                    while (cur<record_length) {
-                        Thread.sleep(1000);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                cur +=1;
-                                timer.setText("Recording Data\n" + cur.toString());
-
-                            }
-                        });
-                    }
-                } catch (InterruptedException e) {
-                }
+            public void onTick(long millisUntilFinished) {
+                timer.setText("Get ready: " + millisUntilFinished / 1000);
             }
-        };
 
-        t.start();
+            public void onFinish() {
+                runSensor();
+                recordTimer = new CountDownTimer(record_length*1000, 1000) {
+
+                    public void onTick(long millisUntilFinished) {
+                        timer.setText("Recording: " + millisUntilFinished / 1000);
+                    }
+
+                    public void onFinish() {
+                        timer.setText("done!");
+                    }
+
+                }.start();
+            }
+
+        }.start();
+
     }
 
 
@@ -212,6 +197,8 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 public void onClick(DialogInterface dialog, int which) {
                     addToDatabase();
                     dialog.dismiss();
+                    prepareTimer.cancel();
+                    recordTimer.cancel();
                     Intent intent = new Intent(Recording.this, MainActivity.class);
                     startActivity(intent);
                 }
@@ -220,6 +207,8 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
+                    prepareTimer.cancel();
+                    recordTimer.cancel();
                     Intent intent = new Intent(Recording.this, MainActivity.class);
                     startActivity(intent);
                 }

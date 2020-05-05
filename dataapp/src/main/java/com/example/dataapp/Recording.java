@@ -127,7 +127,10 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
 
     }
 
-
+    /**
+     * On each tick, store the data
+     * @param event
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
         synchronized (data) {
@@ -233,8 +236,6 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 newId = 0; //If error, then db is empty and userID is 0
             }
             Log.d("Added: ", Integer.toString(newId));
-
-
             for (int i = 1; i < data.size() / 4; i++) {
                 //Add the corresponding values to the db row
                 ArrayList<String> temp = new ArrayList<>();
@@ -247,10 +248,7 @@ public class Recording extends AppCompatActivity implements SensorEventListener 
                 temp.add(data.get(2 + ((i - 1) * 4)));
                 temp.add(data.get(3 + ((i - 1) * 4)));
                 temp.add(userID);
-
-
                 dbHelper.addData(temp);
-
                 Log.d("Added: ", Integer.toString(i));
 
             }

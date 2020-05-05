@@ -44,6 +44,7 @@ public class DBHelper{
     private static final String COL8 = "Chest_Accel_Z";
     private static final String COL9 = "User_ID";
     private RequestQueue queue;
+    private String url = "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec";
    // private static final String COL8 = "Helmet_Accel_X";
    // private static final String COL9 = "Helmet_Accel_Y";
    // private static final String COL10 = "Helmet_Accel_Z";
@@ -57,11 +58,14 @@ public class DBHelper{
     }
 
 
-
+    /**
+     * Send the data to the database
+     * @param items
+     */
     public void addData( final ArrayList<String> items)
     {
 
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwyUTIr6RMxjfIzBdJ9_b9ep7Kzx7ZexpK5bzThA-2CTZjA8r0/exec",
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -90,26 +94,17 @@ public class DBHelper{
                 contentValues.put(COL7,items.get(6));
                 contentValues.put(COL8,items.get(7));
                 contentValues.put(COL9,items.get(8));
-                //contentValues.put(COL8,items.get(6));
-                //contentValues.put(COL9,items.get(7));
-                //contentValues.put(COL10,items.get(8));
+                //contentValues.put(COL8,items.get(9));
+                //contentValues.put(COL9,items.get(10));
+                //contentValues.put(COL10,items.get(11));
 
                 return contentValues;
             }
         };
-
         int socketTimeOut = 50000;
-
         RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         stringRequest.setRetryPolicy(retryPolicy);
-
-
-
         queue.add(stringRequest);
-
-
-
-
 
     }
 

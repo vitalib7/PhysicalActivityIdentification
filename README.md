@@ -6,6 +6,7 @@ To get to it, open the Anaconda Navigator located on the desktop.
 Once it loads up, you should see a dropdown menu labeled applications on. Select "tensorflow" and once it loads, you can launch Jupyter Notebook.
 Open the file called LSTM_Model.ipynb. This notebook is based on another [LSTM model.](https://github.com/dspanah/Human-Activity-Recognition-Keras-Android)
 The very last step in the notebook is exporting the model to use in Android.
+The notebook is also in this repositiory as LSTM_Model.ipynb
 
 # Alternative Option
 If you can't get the above model working, here is an alternative path:

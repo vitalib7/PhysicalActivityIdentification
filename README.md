@@ -23,6 +23,6 @@ to use in our model.
 
 # Helmet Sensor
 Since we don't have the second sensor working, the code for sending it to the script is commented out and missing in some places. The indexes of the commented out code
-may need to be modified
+may need to be modified. It will also need to be added to the Google Script
 
 
